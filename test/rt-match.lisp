@@ -1,4 +1,4 @@
-(in-package #:match)
+(in-package #:match-nptcl)
 
 (deftest match-true.1
   (with-match

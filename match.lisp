@@ -180,13 +180,16 @@
 ;;  Rule Table
 ;;
 (defvar *rule*)
+(defvar *variable-index*)
 
 (defun! init-match ()
   (setq *rule* (make-hash-table :test 'eq))
+  (setq *variable-index* 0)
   (values))
 
 (defun! free-match ()
   (makunbound '*rule*)
+  (makunbound '*variable-index*)
   (values))
 
 (defun! clear-match ()
@@ -194,7 +197,7 @@
   (values))
 
 (defmacro! with-match (&body body)
-  `(let (*rule*)
+  `(let ((*rule*) (*variable-index* 0))
      (init-match)
      ,@body))
 
@@ -235,11 +238,9 @@
 (defun! any? (x)
   (symbol-char? #\_ x 1))
 
-(defvar *make-variable* 0)
-
 (defun! make-variable (v)
   (let ((name (symbol-name v))
-        (index (incf *make-variable* 1)))
+        (index (incf *variable-index* 1)))
     (make-symbol
       (format nil "~A-~A" name index))))
 
@@ -267,12 +268,6 @@
          (map 'vector (lambda (x) (make-expr-call x gensymp)) v))
         (t v)))
 
-(defun! make-expr (v gensymp)
-  (let (*make-expr-table* *make-expr-list*)
-    (values
-      (make-expr-call v gensymp)
-      (nreverse *make-expr-list*))))
-
 (defun! make-expr2 (v1 v2 gensymp)
   (let (*make-expr-table* *make-expr-list*)
     (values
@@ -280,7 +275,7 @@
       (make-expr-call v2 gensymp)
       (nreverse *make-expr-list*))))
 
-(defun parse-clause (name args expr gensymp)
+(defun! parse-clause (name args expr gensymp)
   (mvbind (args expr vars) (make-expr2 args expr gensymp)
     (unless (symbolp name)
       (error! "The name ~S must be a symbol." name))
@@ -387,9 +382,8 @@
      ,@body))
 
 (defun! lexical-get-error (var)
-  (values
-    (or2 (match-find var)
-         (error "Invalid variable, ~S." var))))
+  (or2 (match-find var)
+       (error! "Invalid variable, ~S." var)))
 
 (defun! variable-replace (value)
   (cond ((var? value)
@@ -405,11 +399,11 @@
 (defun! variable-get (var)
   (aif2 (match-find var)
     (values (variable-replace it) t)
-    (error "Invalid variable, ~S." var)))
+    (error! "Invalid variable, ~S." var)))
 
 (defun! variable-set (var value)
   (or (lexical-current-set var value)
-      (error "Invalid variable, ~S." var)))
+      (error! "Invalid variable, ~S." var)))
 
 (defun! variable-undefined-p (var)
   (lexical-current-undefined-p var))
