@@ -607,29 +607,30 @@
         (prog1 (funcall (run-lambda expr next))
           (variable-pop lexical))))))
 
-;;  run-lambda
-(defun! run-lambda-next (next level)
+;;  rule
+(defun! run-rule-next (next level)
   (incf *match-level* 1)
   (lambda ()
     (prog1 (funcall next)
       (setq *match-level* level))))
 
-(defun! run-lambda-cut (level)
+(defun! run-rule-cut (level)
   (prog1 *match-cut*
     (when (eql *match-cut* level)
       (setq *match-cut* nil))))
 
-(defun! run-lambda-call (car cdr next)
+(defun! run-rule (car cdr next)
   (lambda ()
     (let* ((rule (rule-get car))
            (level *match-level*)
-           (next (run-lambda-next next level)))
+           (next (run-rule-next next level)))
       (dolist (clause (rule-list rule))
         (when (run-clause next clause cdr)
           (return t))
-        (when (run-lambda-cut level)
+        (when (run-rule-cut level)
           (return nil))))))
 
+;;  run-lambda
 (defun! run-lambda-p (expr symbol)
   (and (symbolp expr)
        (string= (symbol-name expr) (symbol-name symbol))))
@@ -640,12 +641,12 @@
           ((run-lambda-p car 'or) (run-or cdr next))
           ((run-lambda-p car 'is) (run-is cdr next))
           ((run-lambda-p car 'progn) (run-progn cdr next))
-          (t (run-lambda-call car cdr next)))))
+          (t (run-rule car cdr next)))))
 
 (defun! run-lambda-symbol (expr next)
   (if (var? expr)
     (run-lambda (variable-get expr) next)
-    (run-lambda-call expr nil next)))
+    (run-rule expr nil next)))
 
 (defun! run-lambda (expr next)
   (cond ((run-lambda-p expr 'true) (run-true next))
@@ -684,7 +685,7 @@
         (setq list (match-lisp-alist clause))
         (setq check (funcall call list))))
     (if check
-      (values list check)
+      (values list t)
       (values nil nil))))
 
 (defun! match-true (expr)
