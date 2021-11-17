@@ -1,3 +1,7 @@
+;;
+;;  match for Common Lisp
+;;    https://github.com/nptcl/match
+;;
 (defpackage #:match-nptcl
   (:use #:cl)
   (:nicknames #:match)
@@ -372,7 +376,7 @@
       (setf (lexical-bind stack) list)
       t)))
 
-(defun! lexical-current-undefined-p (v &optional (stack *lexical*))
+(defun! lexical-current-undefined-p (v)
   (mvbind (var check) (match-find v)
     (or (null check)
         (var? var))))

@@ -255,6 +255,110 @@
 
 
 ;;
+;;  sort1
+;;
+(defmacro with-match-sort1 (&body body)
+  `(with-match
+     (defrule (<= ?x ?y) (progn (<= ?x ?y)))
+     (defrule (select ?x (?x . ?xs) ?xs))
+     (defrule (select ?x (?y . ?ys) (?y . ?zs))
+       (select ?x ?ys ?zs))
+     (defrule (permutation ?xs (?z . ?zs))
+       (select ?z ?xs ?ys)
+       (permutation ?ys ?zs))
+     (defrule (permutation () ()))
+     (defrule (orderd ()))
+     (defrule (orderd (_)))
+     (defrule (orderd (?x ?y . ?ys))
+       (<= ?x ?y)
+       (orderd (?y . ?ys)))
+     (defrule (sort1 ?xs ?ys)
+       (permutation ?xs ?ys)
+       (orderd ?ys))
+     ,@body))
+
+(deftest sort1.1
+  (with-match-sort1
+    (match (sort1 (1 2) ?x)))
+  ((?x . (1 2))) t)
+
+(deftest sort1.2
+  (with-match-sort1
+    (match (sort1 (5 4) ?x)))
+  ((?x . (4 5))) t)
+
+(deftest sort1.3
+  (with-match-sort1
+    (match (sort1 (3 2 4 1) ?x)))
+  ((?x . (1 2 3 4))) t)
+
+(deftest sort1.4
+  (with-match-sort1
+    (match (sort1 (2 4 1 3) ?x)))
+  ((?x . (1 2 3 4))) t)
+
+(deftest sort1.5
+  (with-match-sort1
+    (match (sort1 (1 2 3 4) ?x)))
+  ((?x .  (1 2 3 4))) t)
+
+(deftest sort1.6
+  (with-match-sort1
+    (match (sort1 (4 3 2 1) ?x)))
+  ((?x .  (1 2 3 4))) t)
+
+
+;;
+;;  sort2
+;;
+(defmacro with-match-sort2 (&body body)
+  `(with-match
+     (defrule (<= ?x ?y) (progn (<= ?x ?y)))
+     (defrule (> ?x ?y) (progn (> ?x ?y)))
+     (defrule (insert ?x () (?x)))
+     (defrule (insert ?x (?y . ?ys) (?y . ?zs))
+       (> ?x ?y)
+       (insert ?x ?ys ?zs))
+     (defrule (insert ?x (?y . ?ys) (?x ?y . ?ys))
+       (<= ?x ?y))
+     (defrule (sort2 (?x . ?xs) ?ys)
+       (sort2 ?xs ?zs)
+       (insert ?x ?zs ?ys))
+     (defrule (sort2 () ()))
+     ,@body))
+
+(deftest sort2.1
+  (with-match-sort2
+    (match (sort2 (1 2) ?x)))
+  ((?x . (1 2))) t)
+
+(deftest sort2.2
+  (with-match-sort2
+    (match (sort2 (5 4) ?x)))
+  ((?x . (4 5))) t)
+
+(deftest sort2.3
+  (with-match-sort2
+    (match (sort2 (3 2 4 1) ?x)))
+  ((?x . (1 2 3 4))) t)
+
+(deftest sort2.4
+  (with-match-sort2
+    (match (sort2 (2 4 1 3) ?x)))
+  ((?x . (1 2 3 4))) t)
+
+(deftest sort2.5
+  (with-match-sort2
+    (match (sort2 (1 2 3 4) ?x)))
+  ((?x .  (1 2 3 4))) t)
+
+(deftest sort2.6
+  (with-match-sort2
+    (match (sort2 (4 3 2 1) ?x)))
+  ((?x .  (1 2 3 4))) t)
+
+
+;;
 ;;  quicksort
 ;;
 (defmacro with-match-quicksort (&body body)
@@ -279,13 +383,33 @@
 
 (deftest quicksort.1
   (with-match-quicksort
-    (match (quicksort (5 4) ?x)))
-  ((?x . (4 5))) t)
+    (match (quicksort (1 2) ?x)))
+  ((?x . (1 2))) t)
 
 (deftest quicksort.2
   (with-match-quicksort
+    (match (quicksort (5 4) ?x)))
+  ((?x . (4 5))) t)
+
+(deftest quicksort.3
+  (with-match-quicksort
     (match (quicksort (4 5 1 2 9 10 6 7 8 3) ?x)))
   ((?x . (1 2 3 4 5 6 7 8 9 10))) t)
+
+(deftest quicksort.4
+  (with-match-quicksort
+    (match (quicksort (8 3 7 4 9 5 1 10 5 2 6) ?x)))
+  ((?x . (1 2 3 4 5 5 6 7 8 9 10))) t)
+
+(deftest quicksort.5
+  (with-match-quicksort
+    (match (quicksort (1 2 3 4 5 5 6 7 8 9 10) ?x)))
+  ((?x .  (1 2 3 4 5 5 6 7 8 9 10))) t)
+
+(deftest quicksort.6
+  (with-match-quicksort
+    (match (quicksort (10 9 8 7 6 5 5 4 3 2 1) ?x)))
+  ((?x .  (1 2 3 4 5 5 6 7 8 9 10))) t)
 
 
 ;;

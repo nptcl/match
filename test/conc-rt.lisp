@@ -85,10 +85,9 @@
 (defun push-queue (symbol value)
   (let ((cons (symbol-value symbol))
         (new (cons value nil)))
-    (destructuring-bind (root . tail) cons
-      (if root
-        (setf (cdr tail) new (cdr cons) new)
-        (setf (car cons) new (cdr cons) new)))
+    (if (car cons)
+      (setf (cddr cons) new (cdr cons) new)
+      (setf (car cons) new (cdr cons) new))
     nil))
 
 (defun push-entries (name expr values)

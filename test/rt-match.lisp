@@ -321,6 +321,34 @@
 
 
 ;;
+;;  value
+;;
+(deftest match-value.1
+  (with-match
+    (defrule (aaa 10 symbol "Hello"))
+    (match (aaa 10 _ _)))
+  nil t)
+
+(deftest match-value.2
+  (with-match
+    (defrule (aaa 10 symbol "Hello"))
+    (match (aaa _ symbol _)))
+  nil t)
+
+(deftest match-value.3
+  (with-match
+    (defrule (aaa 10 symbol "Hello"))
+    (match (aaa _ _ "Hello")))
+  nil t)
+
+(deftest match-value.4
+  (with-match
+    (defrule (aaa 10 symbol "Hello"))
+    (match (aaa ?x ?y ?z)))
+  ((?x . 10) (?y . symbol) (?z . "Hello")) t)
+
+
+;;
 ;;  test
 ;;
 (do-tests :delete t)
