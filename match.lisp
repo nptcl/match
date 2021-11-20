@@ -598,27 +598,33 @@
           (variable-pop lexical))))))
 
 ;;  rule
-(defun run-rule-next (level next)
-  (incf *match-level* 1)
+(defun run-rule-next (level0 level1 next)
   (lambda ()
+    (setq *match-level* level0)
     (prog1 (funcall next)
-      (setq *match-level* level))))
+      (setq *match-level* level1))))
 
 (defun run-rule-cut (level)
   (prog1 *match-cut*
     (when (eql *match-cut* level)
       (setq *match-cut* nil))))
 
+(defun run-rule-call (car cdr level next)
+  (let ((rule (rule-get car)))
+    (dolist (clause (rule-list rule))
+      (when (run-clause clause cdr next)
+        (return t))
+      (when (run-rule-cut level)
+        (return nil)))))
+
 (defun run-rule (car cdr next)
   (lambda ()
-    (let* ((rule (rule-get car))
-           (level *match-level*)
-           (next (run-rule-next level next)))
-      (dolist (clause (rule-list rule))
-        (when (run-clause clause cdr next)
-          (return t))
-        (when (run-rule-cut level)
-          (return nil))))))
+    (let* ((level0 *match-level*)
+           (level1 (1+ level0))
+           (next (run-rule-next level0 level1 next)))
+      (setq *match-level* level1)
+      (prog1 (run-rule-call car cdr level1 next)
+        (setq *match-level* level0)))))
 
 ;;  run-lambda
 (defun run-lambda-p (expr symbol)
