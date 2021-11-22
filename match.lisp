@@ -11,6 +11,10 @@
     #:free-match
     #:clear-match
     #:with-match
+    #:save-match
+    #:restore-match
+    #:make-match-instance
+    #:with-match-instance
     #:delete-rule
     #:define-rule
     #:defrule
@@ -190,6 +194,34 @@
   `(let ((*rule*) (*variable-index* 0))
      (init-match)
      ,@body))
+
+(defstruct match rule index)
+
+(defun save-match (&optional inst)
+  (if inst
+    (progn
+      (setf (match-rule inst) *rule*)
+      (setf (match-index inst) *variable-index*)
+      inst)
+    (make-match :rule *rule* :index *variable-index*)))
+
+(defun restore-match (inst)
+  (setq *rule* (match-rule inst))
+  (setq *variable-index* (match-index inst))
+  (values))
+
+(defun make-match-instance ()
+  (with-match
+    (save-match)))
+
+(defmacro with-match-instance ((var) &body body)
+  (let ((g (gensym)))
+    `(with-match
+       (let ((,g ,var))
+         (restore-match ,g)
+         (unwind-protect
+           (progn ,@body)
+           (save-match ,g))))))
 
 (defun rule-get (name)
   (declare (type symbol name))

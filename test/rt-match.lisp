@@ -349,6 +349,52 @@
 
 
 ;;
+;;  save
+;;
+(deftest match-instance.1
+  (let (inst)
+    (with-match
+      (defrule aaa)
+      (setq inst (save-match)))
+    (with-match
+      (restore-match inst)
+      (match aaa)))
+  nil t)
+
+(deftest match-instance.2
+  (let (inst)
+    (with-match
+      (defrule aaa)
+      (setq inst (save-match)))
+    (with-match-instance
+      (inst)
+      (match aaa)))
+  nil t)
+
+(deftest match-instance.3
+  (let (inst)
+    (with-match
+      (setq inst (save-match)))
+    (with-match-instance
+      (inst)
+      (defrule aaa))
+    (with-match-instance
+      (inst)
+      (match aaa)))
+  nil t)
+
+(deftest match-instance.4
+  (let ((inst (make-match-instance)))
+    (with-match-instance
+      (inst)
+      (defrule aaa))
+    (with-match-instance
+      (inst)
+      (match aaa)))
+  nil t)
+
+
+;;
 ;;  test
 ;;
 (do-tests :delete t)
